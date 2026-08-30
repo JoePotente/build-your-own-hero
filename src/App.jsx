@@ -280,14 +280,10 @@ Return ONLY valid JSON, no markdown fences, no preamble, in this exact shape:
   "one_habit_to_start": "the single highest-leverage habit for them to start this week"
 }`;
 
-  const response = await fetch("https://api.anthropic.com/v1/messages", {
+  const response = await fetch("/.netlify/functions/generate-plan", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      model: "claude-sonnet-4-6",
-      max_tokens: 1000,
-      messages: [{ role: "user", content: prompt }],
-    }),
+    body: JSON.stringify({ prompt }),
   });
   if (!response.ok) throw new Error("Request failed");
   const data = await response.json();
