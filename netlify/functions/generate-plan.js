@@ -1,24 +1,24 @@
 // This runs on Netlify's servers, not in the browser — so the API key
 // never gets exposed to anyone visiting the site.
 
-export default async (req) => {
-  if (req.method !== "POST") {
-    return new Response(JSON.stringify({ error: "Method not allowed" }), { status: 405 });
+exports.handler = async (event) => {
+  if (event.httpMethod !== "POST") {
+    return { statusCode: 405, body: JSON.stringify({ error: "Method not allowed" }) };
   }
 
   try {
-    const { prompt } = await req.json();
+    const { prompt } = JSON.parse(event.body || "{}");
 
     if (!prompt || typeof prompt !== "string") {
-      return new Response(JSON.stringify({ error: "Missing prompt" }), { status: 400 });
+      return { statusCode: 400, body: JSON.stringify({ error: "Missing prompt" }) };
     }
 
     const apiKey = process.env.ANTHROPIC_API_KEY;
     if (!apiKey) {
-      return new Response(
-        JSON.stringify({ error: "Server is missing ANTHROPIC_API_KEY" }),
-        { status: 500 }
-      );
+      return {
+        statusCode: 500,
+        body: JSON.stringify({ error: "Server is missing ANTHROPIC_API_KEY" }),
+      };
     }
 
     const response = await fetch("https://api.anthropic.com/v1/messages", {
@@ -37,19 +37,22 @@ export default async (req) => {
 
     if (!response.ok) {
       const errText = await response.text();
-      return new Response(JSON.stringify({ error: "Anthropic API error", detail: errText }), {
-        status: response.status,
-      });
+      return {
+        statusCode: response.status,
+        body: JSON.stringify({ error: "Anthropic API error", detail: errText }),
+      };
     }
 
     const data = await response.json();
-    return new Response(JSON.stringify(data), {
-      status: 200,
+    return {
+      statusCode: 200,
       headers: { "Content-Type": "application/json" },
-    });
+      body: JSON.stringify(data),
+    };
   } catch (err) {
-    return new Response(JSON.stringify({ error: "Server error", detail: String(err) }), {
-      status: 500,
-    });
+    return {
+      statusCode: 500,
+      body: JSON.stringify({ error: "Server error", detail: String(err) }),
+    };
   }
 };
