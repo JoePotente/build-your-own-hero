@@ -287,8 +287,13 @@ Return ONLY valid JSON, no markdown fences, no preamble, in this exact shape:
   });
   if (!response.ok) throw new Error("Request failed");
   const data = await response.json();
-  const text = data.content.map((b) => b.text || "").join("").trim();
-  const clean = text.replace(/```json|```/g, "").trim();
+    const text = data.content.map((b) => b.text || "").join("").trim();
+  let clean = text.replace(/```json|```/g, "").trim();
+  const start = clean.indexOf("{");
+  const end = clean.lastIndexOf("}");
+  if (start !== -1 && end !== -1) {
+    clean = clean.slice(start, end + 1);
+  }
   return JSON.parse(clean);
 }
 
