@@ -1,6 +1,3 @@
-// This runs on Netlify's servers, not in the browser — so the API key
-// never gets exposed to anyone visiting the site.
-
 exports.handler = async (event) => {
   if (event.httpMethod !== "POST") {
     return { statusCode: 405, body: JSON.stringify({ error: "Method not allowed" }) };
@@ -29,7 +26,7 @@ exports.handler = async (event) => {
         "anthropic-version": "2023-06-01",
       },
       body: JSON.stringify({
-        model: "claude-sonnet-4-6",
+        model: "claude-sonnet-5",
         max_tokens: 1000,
         messages: [{ role: "user", content: prompt }],
       }),
