@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useRef } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { FlaskConical, Activity, ShieldAlert, ShieldCheck, ShieldQuestion, Dumbbell, UtensilsCrossed, Clock, Wallet, CalendarDays, Target, ChevronDown, AlertTriangle, CheckCircle2, Circle, ArrowRight } from "lucide-react";
 
 const TOKENS = {
@@ -14,7 +14,22 @@ const TOKENS = {
   cream: "#FBFAF6",
 };
 
-// Decorative amino-acid-chain motif — echoes the subject without being a literal diagram.
+const FONT_LINK = "https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap";
+
+function useFonts() {
+  const [loaded, setLoaded] = useState(false);
+  useEffect(() => {
+    if (document.getElementById("pg-fonts")) { setLoaded(true); return; }
+    const link = document.createElement("link");
+    link.id = "pg-fonts";
+    link.rel = "stylesheet";
+    link.href = FONT_LINK;
+    link.onload = () => setLoaded(true);
+    document.head.appendChild(link);
+  }, []);
+  return loaded;
+}
+
 function ChainMotif({ className = "", nodeCount = 9, stroke = TOKENS.evergreen, animate = true }) {
   const pts = Array.from({ length: nodeCount }).map((_, i) => {
     const x = (i / (nodeCount - 1)) * 100;
@@ -56,20 +71,29 @@ function ChainMotif({ className = "", nodeCount = 9, stroke = TOKENS.evergreen, 
   );
 }
 
-const FONT_LINK = "https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap";
-
-function useFonts() {
-  const [loaded, setLoaded] = useState(false);
-  React.useEffect(() => {
-    if (document.getElementById("pg-fonts")) { setLoaded(true); return; }
-    const link = document.createElement("link");
-    link.id = "pg-fonts";
-    link.rel = "stylesheet";
-    link.href = FONT_LINK;
-    link.onload = () => setLoaded(true);
-    document.head.appendChild(link);
-  }, []);
-  return loaded;
+function LogoIcon({ size = 32 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="50" cy="50" r="46" fill={TOKENS.cream} stroke={TOKENS.ink} strokeWidth="3.5" />
+      <path
+        d="M 26 70 L 40 59 L 55 47 L 74 29"
+        fill="none"
+        stroke={TOKENS.evergreen}
+        strokeWidth="5.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <circle cx="26" cy="70" r="4" fill={TOKENS.evergreen} />
+      <circle cx="40" cy="59" r="5" fill={TOKENS.evergreen} />
+      <circle cx="55" cy="47" r="5.5" fill={TOKENS.evergreen} />
+      <circle cx="74" cy="29" r="8.5" fill={TOKENS.amber} stroke={TOKENS.ink} strokeWidth="2" />
+      <g stroke={TOKENS.amber} strokeWidth="2.5" strokeLinecap="round">
+        <line x1="74" y1="14" x2="74" y2="9" />
+        <line x1="86" y1="20" x2="90" y2="17" />
+        <line x1="89" y1="32" x2="94" y2="32" />
+      </g>
+    </svg>
+  );
 }
 
 const TIERS = [
@@ -79,8 +103,7 @@ const TIERS = [
     name: "Approved & trial-backed",
     color: TOKENS.evergreen,
     icon: ShieldCheck,
-    summary:
-      "Passed controlled human trials, FDA-approved for a specific use, and prescribed with monitoring.",
+    summary: "Passed controlled human trials, FDA-approved for a specific use, and prescribed with monitoring.",
     examples: [
       { name: "Semaglutide / tirzepatide (GLP-1s)", note: "Approved for type 2 diabetes and, at certain doses, weight management." },
       { name: "Insulin", note: "The original therapeutic peptide, approved for over a century." },
@@ -95,8 +118,7 @@ const TIERS = [
     name: "Some human data, prescribed off-label",
     color: TOKENS.amber,
     icon: ShieldQuestion,
-    summary:
-      "Limited controlled trials in humans. Sometimes prescribed off-label by specialists who monitor bloodwork, but not FDA-approved for the way they're being marketed.",
+    summary: "Limited controlled trials in humans. Sometimes prescribed off-label by specialists who monitor bloodwork, but not FDA-approved for the way they're being marketed.",
     examples: [
       { name: "Sermorelin", note: "Some trial history as a growth-hormone secretagogue; used off-label, rarely with rigorous monitoring outside specialty clinics." },
       { name: "Ipamorelin", note: "One controlled human trial; commonly stacked with other peptides without data on the combination." },
@@ -110,8 +132,7 @@ const TIERS = [
     name: "Grey-market, minimal-to-no human data",
     color: TOKENS.brick,
     icon: ShieldAlert,
-    summary:
-      "Sold as 'research use only' to skip FDA oversight. No reliable data on long-term safety, purity, or correct dosing in humans.",
+    summary: "Sold as 'research use only' to skip FDA oversight. No reliable data on long-term safety, purity, or correct dosing in humans.",
     examples: [
       { name: "BPC-157", note: "Animal and in-vitro data only. No controlled human trials for injury repair." },
       { name: "CJC-1295 (with or without DAC)", note: "Failed to advance through clinical trials as a drug candidate." },
@@ -138,8 +159,6 @@ const GOOD_QUESTIONS = [
   "Is there an approved alternative that does what I'm actually trying to achieve?",
 ];
 
-// ---------- Plan builder logic ----------
-
 const TIME_OPTIONS = [
   { id: "low", label: "15–20 min", days: "3x/week", detail: "Short sessions, most days skipped by life." },
   { id: "mid", label: "30–45 min", days: "3–4x/week", detail: "A real but tight window most days." },
@@ -164,6 +183,31 @@ const GOAL_OPTIONS = [
   { id: "strength", label: "Build strength / muscle" },
   { id: "composition", label: "Shift body composition" },
   { id: "foundation", label: "Just build a sustainable baseline" },
+];
+
+const EXPERIENCE_OPTIONS = [
+  { id: "new", label: "New to training", detail: "Little to no consistent gym history." },
+  { id: "some", label: "Some experience", detail: "On and off for a year or more." },
+  { id: "experienced", label: "Experienced", detail: "Trained consistently for years." },
+];
+
+const EQUIPMENT_OPTIONS = [
+  { id: "none", label: "Bodyweight only", detail: "No equipment, home or anywhere." },
+  { id: "home", label: "Home basics", detail: "Bands, dumbbells, or a small rack." },
+  { id: "gym", label: "Full gym access", detail: "Machines, barbells, the works." },
+];
+
+const DIET_OPTIONS = [
+  { id: "omnivore", label: "Omnivore" },
+  { id: "vegetarian", label: "Vegetarian" },
+  { id: "vegan", label: "Vegan" },
+  { id: "pescatarian", label: "Pescatarian" },
+];
+
+const COOKTIME_OPTIONS = [
+  { id: "low", label: "Barely any", detail: "Meals need to be fast, most days." },
+  { id: "mid", label: "Some", detail: "Can cook most nights, not elaborate." },
+  { id: "high", label: "Plenty", detail: "Happy to cook, meal-prep on weekends." },
 ];
 
 function buildTraining(time, schedule, goal) {
@@ -232,31 +276,6 @@ function buildNutrition(budget, schedule, goal) {
   return { ...base, scheduleNote, goalNote };
 }
 
-const EXPERIENCE_OPTIONS = [
-  { id: "new", label: "New to training", detail: "Little to no consistent gym history." },
-  { id: "some", label: "Some experience", detail: "On and off for a year or more." },
-  { id: "experienced", label: "Experienced", detail: "Trained consistently for years." },
-];
-
-const EQUIPMENT_OPTIONS = [
-  { id: "none", label: "Bodyweight only", detail: "No equipment, home or anywhere." },
-  { id: "home", label: "Home basics", detail: "Bands, dumbbells, or a small rack." },
-  { id: "gym", label: "Full gym access", detail: "Machines, barbells, the works." },
-];
-
-const DIET_OPTIONS = [
-  { id: "omnivore", label: "Omnivore" },
-  { id: "vegetarian", label: "Vegetarian" },
-  { id: "vegan", label: "Vegan" },
-  { id: "pescatarian", label: "Pescatarian" },
-];
-
-const COOKTIME_OPTIONS = [
-  { id: "low", label: "Barely any", detail: "Meals need to be fast, most days." },
-  { id: "mid", label: "Some", detail: "Can cook most nights, not elaborate." },
-  { id: "high", label: "Plenty", detail: "Happy to cook, meal-prep on weekends." },
-];
-
 async function generateBespokePlan(inputs) {
   const prompt = `You are a training and nutrition coach building a personalized plan. You are NOT a doctor and must not reference or ask about medical history, diagnoses, or medications — work only from the goals and lifestyle preferences given below. Keep guidance general and non-extreme: no specific calorie or macro numbers, no aggressive deficits, plate-method and portion-by-hand style guidance only. If anything here suggests a medical concern, note that they should raise it with their own doctor rather than advising on it yourself.
 
@@ -278,51 +297,33 @@ Return ONLY valid JSON, no markdown fences, no preamble, in this exact shape:
   "training": { "structure": "...", "weekly_shape": "...", "key_focus": "..." },
   "nutrition": { "framework": "...", "shopping_and_prep": "...", "key_focus": "..." },
   "one_habit_to_start": "the single highest-leverage habit for them to start this week"
-}`;
+}
+Keep every field brief — one short sentence each. This must fit well under 500 tokens total.`;
 
   const response = await fetch("/.netlify/functions/generate-plan", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ prompt }),
   });
-  if (!response.ok) throw new Error("Request failed");
+
+  if (!response.ok) {
+    throw new Error(`Request failed with status ${response.status}`);
+  }
+
   const data = await response.json();
-    const text = data.content.map((b) => b.text || "").join("").trim();
+  const text = data.content.map((b) => b.text || "").join("").trim();
   let clean = text.replace(/```json|```/g, "").trim();
   const start = clean.indexOf("{");
   const end = clean.lastIndexOf("}");
   if (start !== -1 && end !== -1) {
     clean = clean.slice(start, end + 1);
   }
-  return JSON.parse(clean);
-}
 
-
-
-// Wordmark icon — mirrors the brand mark: an ascending chain that breaks into a spark.
-function LogoIcon({ size = 32 }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="50" cy="50" r="46" fill={TOKENS.cream} stroke={TOKENS.ink} strokeWidth="3.5" />
-      <path
-        d="M 26 70 L 40 59 L 55 47 L 74 29"
-        fill="none"
-        stroke={TOKENS.evergreen}
-        strokeWidth="5.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <circle cx="26" cy="70" r="4" fill={TOKENS.evergreen} />
-      <circle cx="40" cy="59" r="5" fill={TOKENS.evergreen} />
-      <circle cx="55" cy="47" r="5.5" fill={TOKENS.evergreen} />
-      <circle cx="74" cy="29" r="8.5" fill={TOKENS.amber} stroke={TOKENS.ink} strokeWidth="2" />
-      <g stroke={TOKENS.amber} strokeWidth="2.5" strokeLinecap="round">
-        <line x1="74" y1="14" x2="74" y2="9" />
-        <line x1="86" y1="20" x2="90" y2="17" />
-        <line x1="89" y1="32" x2="94" y2="32" />
-      </g>
-    </svg>
-  );
+  try {
+    return JSON.parse(clean);
+  } catch (e) {
+    throw new Error("Bad response format: " + clean.slice(0, 150));
+  }
 }
 
 function TierCard({ tier, open, onToggle }) {
@@ -459,7 +460,7 @@ export default function BuildYourOwnHero() {
   const [goal, setGoal] = useState(null);
   const [showPlan, setShowPlan] = useState(false);
 
-  const [mode, setMode] = useState("quick"); // "quick" | "bespoke"
+  const [mode, setMode] = useState("quick");
   const [isPremium, setIsPremium] = useState(false);
   const [experience, setExperience] = useState(null);
   const [equipment, setEquipment] = useState(null);
@@ -472,7 +473,11 @@ export default function BuildYourOwnHero() {
   const [apiError, setApiError] = useState(null);
   const [apiPlan, setApiPlan] = useState(null);
 
+  const canGenerate = time && budget && schedule && goal;
   const canGenerateBespoke = time && budget && schedule && experience && equipment && diet && cookTime && goalText.trim();
+
+  const training = useMemo(() => (canGenerate ? buildTraining(time, schedule, goal) : null), [time, schedule, goal, canGenerate]);
+  const nutrition = useMemo(() => (canGenerate ? buildNutrition(budget, schedule, goal) : null), [budget, schedule, goal, canGenerate]);
 
   async function handleBespokeSubmit() {
     setApiLoading(true);
@@ -492,16 +497,11 @@ export default function BuildYourOwnHero() {
       });
       setApiPlan(plan);
     } catch (e) {
-      setApiError("Couldn't generate a plan just now — try again in a moment.");
+      setApiError(`Couldn't generate a plan — ${e.message || "unknown error"}`);
     } finally {
       setApiLoading(false);
     }
   }
-
-  const canGenerate = time && budget && schedule && goal;
-
-  const training = useMemo(() => (canGenerate ? buildTraining(time, schedule, goal) : null), [time, schedule, goal, canGenerate]);
-  const nutrition = useMemo(() => (canGenerate ? buildNutrition(budget, schedule, goal) : null), [budget, schedule, goal, canGenerate]);
 
   return (
     <div
@@ -522,7 +522,6 @@ export default function BuildYourOwnHero() {
         }
       `}</style>
 
-      {/* Hero */}
       <header
         className="relative border-b overflow-hidden"
         style={{
@@ -530,7 +529,6 @@ export default function BuildYourOwnHero() {
           background: `radial-gradient(ellipse 900px 500px at 82% -10%, ${TOKENS.evergreen}22, transparent 60%), ${TOKENS.paper}`,
         }}
       >
-        {/* faint dot-grid texture, evokes lab notebook graph paper */}
         <div
           className="absolute inset-0 opacity-[0.35] pointer-events-none"
           style={{
@@ -583,7 +581,6 @@ export default function BuildYourOwnHero() {
           </div>
         </div>
 
-        {/* Tabs */}
         <div className="relative max-w-3xl mx-auto px-5 sm:px-8">
           <div className="flex gap-1 -mb-px">
             {[
@@ -823,61 +820,61 @@ export default function BuildYourOwnHero() {
                   </div>
                 ) : (
                   <>
-                <div>
-                  <div className="flex items-center gap-2 mb-3">
-                    <Clock size={16} style={{ color: TOKENS.evergreen }} />
-                    <label className="text-sm font-semibold" style={{ color: TOKENS.ink }}>
-                      How much training time do you realistically have?
-                    </label>
-                  </div>
-                  <SelectGrid options={TIME_OPTIONS} value={time} onChange={setTime} />
-                </div>
+                    <div>
+                      <div className="flex items-center gap-2 mb-3">
+                        <Clock size={16} style={{ color: TOKENS.evergreen }} />
+                        <label className="text-sm font-semibold" style={{ color: TOKENS.ink }}>
+                          How much training time do you realistically have?
+                        </label>
+                      </div>
+                      <SelectGrid options={TIME_OPTIONS} value={time} onChange={setTime} />
+                    </div>
 
-                <div>
-                  <div className="flex items-center gap-2 mb-3">
-                    <Wallet size={16} style={{ color: TOKENS.evergreen }} />
-                    <label className="text-sm font-semibold" style={{ color: TOKENS.ink }}>
-                      What's your food budget like?
-                    </label>
-                  </div>
-                  <SelectGrid options={BUDGET_OPTIONS} value={budget} onChange={setBudget} />
-                </div>
+                    <div>
+                      <div className="flex items-center gap-2 mb-3">
+                        <Wallet size={16} style={{ color: TOKENS.evergreen }} />
+                        <label className="text-sm font-semibold" style={{ color: TOKENS.ink }}>
+                          What's your food budget like?
+                        </label>
+                      </div>
+                      <SelectGrid options={BUDGET_OPTIONS} value={budget} onChange={setBudget} />
+                    </div>
 
-                <div>
-                  <div className="flex items-center gap-2 mb-3">
-                    <CalendarDays size={16} style={{ color: TOKENS.evergreen }} />
-                    <label className="text-sm font-semibold" style={{ color: TOKENS.ink }}>
-                      What does your week look like?
-                    </label>
-                  </div>
-                  <SelectGrid options={SCHEDULE_OPTIONS} value={schedule} onChange={setSchedule} columns={2} />
-                </div>
+                    <div>
+                      <div className="flex items-center gap-2 mb-3">
+                        <CalendarDays size={16} style={{ color: TOKENS.evergreen }} />
+                        <label className="text-sm font-semibold" style={{ color: TOKENS.ink }}>
+                          What does your week look like?
+                        </label>
+                      </div>
+                      <SelectGrid options={SCHEDULE_OPTIONS} value={schedule} onChange={setSchedule} columns={2} />
+                    </div>
 
-                <div>
-                  <div className="flex items-center gap-2 mb-3">
-                    <Target size={16} style={{ color: TOKENS.evergreen }} />
-                    <label className="text-sm font-semibold" style={{ color: TOKENS.ink }}>
-                      What are you actually trying to do?
-                    </label>
-                  </div>
-                  <SelectGrid options={GOAL_OPTIONS} value={goal} onChange={setGoal} columns={2} />
-                </div>
+                    <div>
+                      <div className="flex items-center gap-2 mb-3">
+                        <Target size={16} style={{ color: TOKENS.evergreen }} />
+                        <label className="text-sm font-semibold" style={{ color: TOKENS.ink }}>
+                          What are you actually trying to do?
+                        </label>
+                      </div>
+                      <SelectGrid options={GOAL_OPTIONS} value={goal} onChange={setGoal} columns={2} />
+                    </div>
 
-                <button
-                  disabled={!canGenerate}
-                  onClick={() => setShowPlan(true)}
-                  className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3.5 rounded-sm text-sm font-semibold transition-all hover:brightness-110 active:scale-[0.98]"
-                  style={{
-                    background: canGenerate ? TOKENS.evergreen : `${TOKENS.ink}25`,
-                    color: TOKENS.cream,
-                    fontFamily: "'IBM Plex Sans', sans-serif",
-                    cursor: canGenerate ? "pointer" : "not-allowed",
-                    boxShadow: canGenerate ? `0 4px 14px ${TOKENS.evergreen}40` : "none",
-                  }}
-                >
-                  Build my plan
-                  <ArrowRight size={16} />
-                </button>
+                    <button
+                      disabled={!canGenerate}
+                      onClick={() => setShowPlan(true)}
+                      className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3.5 rounded-sm text-sm font-semibold transition-all hover:brightness-110 active:scale-[0.98]"
+                      style={{
+                        background: canGenerate ? TOKENS.evergreen : `${TOKENS.ink}25`,
+                        color: TOKENS.cream,
+                        fontFamily: "'IBM Plex Sans', sans-serif",
+                        cursor: canGenerate ? "pointer" : "not-allowed",
+                        boxShadow: canGenerate ? `0 4px 14px ${TOKENS.evergreen}40` : "none",
+                      }}
+                    >
+                      Build my plan
+                      <ArrowRight size={16} />
+                    </button>
                   </>
                 )}
               </div>
